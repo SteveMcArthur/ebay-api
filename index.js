@@ -1,42 +1,9 @@
-var ebayAPI = require('./nodejs-ebay-api');
-
-function formatItem(item) {
-  let result = {
-    price: item.SellingStatus.CurrentPrice.amount,
-    shipping: item.ShippingDetails.ShippingServiceOptions.ShippingServiceCost.amount,
-    sku: item.SKU,
-    title: item.Title,
-    itemid: item.ItemID,
-    url: item.ListingDetails.ViewItemURL,
-    img: item.PictureDetails.GalleryURL
-  }
-  return result;
-
-}
-
-const buildArray = (data) => {
-  let items = data.ActiveList[0].Items;
-  let result = [];
-  let i = 1;
-  let price = "";
-  let title = "";
-  let itemId = "";
-  let itemIdArray = [];
-  items.forEach((item) => {
-    itemId = item.ItemID;
-    if (itemIdArray.indexOf(itemId) === -1) {
-      itemIdArray.push(itemId);
-      formatted = formatItem(item);
-      result.push(formatted);
-      i++;
-    }
-  });
-  return result;
-}
-
+const ebayXML = require('./nodejs-ebay-api');
+const ebayFind = require('./ebay-find-api');
+const { buildArray, formatItem } = require('./lib/dataformatter');
+const formatData = require('./lib/dataformatter')
 
 function Ebay(config) {
-
   this.config = {
     devId: config.devId,
     certId: config.certId,
@@ -45,9 +12,7 @@ function Ebay(config) {
     sandbox: config.sandbox || false
   }
   this.outputRawData = config.outputRawData || false;
-
 }
-
 
 Ebay.prototype.setOutputRawData = function (rawData) {
   this.outputRawData = rawData ? true : false;
@@ -64,14 +29,32 @@ function getConfig(serviceName, opType, params) {
     sandbox: this.config.sandbox,
     params: params
   }
-
   return newConfig
-
 }
-function makeRequest(serviceName, opType, params, callback) {
+
+function getFindConfig(serviceName, opType, params) {
+  let globalID = params.site || "EBAY-US";
+  let limit = params.limit || 100;
+  let sellerInfo = true
+  delete params.site;
+  delete params.limit;
+  let newConfig = {
+    serviceName: serviceName,
+    opType: opType,
+    appId: this.config.appId,
+    params: params,
+    globalID: globalID,
+    limit: limit,
+    sellerInfo: sellerInfo,
+    sandbox: this.config.sandbox
+    //keywords: params.keywords
+  }
+  return newConfig;
+}
+function makeXMLRequest(serviceName, opType, params, callback) {
   let newConfig = getConfig.call(this, serviceName, opType, params);
   let self = this;
-  ebayAPI.xmlRequest(newConfig, function (error, results) {
+  ebayXML.xmlRequest(newConfig, function (error, results) {
     if (error) {
       console.log(error);
       callback(error)
@@ -79,13 +62,27 @@ function makeRequest(serviceName, opType, params, callback) {
 
       let data = results;
       if (!self.outputRawData) {
-        if (data.ActiveList) {
-          data = buildArray(results);
-        } else {
-          data = formatItem(results.Item)
-        }
+        data = formatData(results);
       }
 
+      callback(null, data);
+    }
+  });
+}
+
+function makeURLRequest(serviceName, opType, params, callback) {
+  let newConfig = getFindConfig.call(this, serviceName, opType, params);
+  let self = this;
+  ebayFind.findItemsByKeywords(newConfig, function (error, results) {
+    if (error) {
+      console.log(error);
+      callback(error)
+    } else {
+
+      let data = results;
+      if (!self.outputRawData) {
+        data = formatData(results);
+      }
       callback(null, data);
     }
   });
@@ -97,17 +94,44 @@ Ebay.prototype.getItem = function (itemId, callback) {
     itemID: itemId,
     DetailLevel: 'ReturnAll'
   }
-  makeRequest.call(this, "Trading", opType, params, callback);
+  makeXMLRequest.call(this, "Trading", opType, params, callback);
 }
 
 Ebay.prototype.getMySelling = function (callback) {
   let opType = 'GetMyeBaySelling';
   let params = {
-      ActiveList: {
-        Include: true
-      }
+    ActiveList: {
+      Include: true
+    }
+    //DetailLevel: 'ReturnAll' //this just returns active,sold and deactivate
   };
-  makeRequest.call(this, "Trading", opType, params, callback);
+  makeXMLRequest.call(this, "Trading", opType, params, callback);
+}
+
+Ebay.prototype.getSellerList = function (callback) {
+  let opType = 'GetSellerList';
+  let day = 1000 * 60 * 60 * 24;
+  let month = day * 30
+  let dt = new Date().getTime();
+  let params = {
+    EndTimeFrom: (new Date(dt - month)).toISOString(),
+    EndTimeTo: (new Date(dt + month)).toISOString(),
+    IncludeWatchCount: true,
+    //GranularityLevel: "Fine",
+    //DetailLevel: "ItemReturnDescription",
+    DetailLevel: 'ReturnAll',
+    Pagination: {
+      EntriesPerPage: 50,
+      PageNumber: 1
+    }
+  };
+  makeXMLRequest.call(this, "Trading", opType, params, callback);
+}
+
+Ebay.prototype.findItemsByKeywords = function (keywords, params, callback) {
+  let opType = 'findItemsByKeywords';
+  params.keywords = keywords;
+  makeURLRequest.call(this, "Finding", opType, params, callback);
 }
 
 module.exports = Ebay;

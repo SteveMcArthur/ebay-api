@@ -18,7 +18,15 @@ const testItemId = process.env.EBAY_TEST_ITEMID;
 
 const ebay = new Ebay(config);
 
-describe("call getItem", function () {
+function getOutputFileName(name){
+    let result = name + ".json";
+    if(!ebay.outputRawData){
+        result = name+"-formatted.json";
+    }
+    return result;
+}
+
+/* describe("call getItem", function () {
     let dataReturned = null;
     let errReturned = null;
     before(function(done){
@@ -63,7 +71,7 @@ describe("call getMySelling", function () {
     it('ActiveList[0] should have property "Items"', function () {
         assert.property(dataReturned.ActiveList[0], 'Items');
     });
-});
+}); */
 
 
 function getMySelling() {
@@ -76,13 +84,38 @@ function getMySelling() {
     });
 }
 function getItem() {
-    ebay.getItem("183619172569", function (err, data) {
+    ebay.getItem("183545131259", function (err, data) {
         if (err) {
             console.log(err);
         } else {
-            fs.writeFileSync("getItem.json", JSON.stringify(data, null, 4), "utf-8");
+            fs.writeFileSync(getOutputFileName("getItem"), JSON.stringify(data, null, 4), "utf-8");
         }
     });
 }
+
+function search(){
+    let options = {
+        site: "EBAY-GB"
+    }
+    ebay.findItemsByKeywords("Doctor Who Birthday Card",options,function(err,data){
+        if (err) {
+            console.log(err);
+        } else {
+            fs.writeFileSync("findItemsByKeywords.json", JSON.stringify(data, null, 4), "utf-8");
+        }
+    });
+}
+function getSellerList() {
+    ebay.getSellerList(function (err, data) {
+        if (err) {
+            console.log(err);
+        } else {
+            fs.writeFileSync("sellerlist-raw.json", JSON.stringify(data, null, 4), "utf-8");
+        }
+    });
+}
+//ebay.setOutputRawData(false);
 //getItem();
 //getMySelling();
+//search();
+getSellerList();
