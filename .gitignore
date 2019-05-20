@@ -34,3 +34,4 @@ node_modules/
 .env
 /test/activeListings.json
 /test/getItem.json
+.vscode

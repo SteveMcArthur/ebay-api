@@ -21,7 +21,7 @@ function buildSearchUrl(options) {
     base_url += options.limit ? "&paginationInput.entriesPerPage=" + options.limit : '';
     base_url += options.globalID ? "&GLOBAL-ID=" + options.globalID : '';
     base_url += options.pageNumber ? "&paginationInput.pageNumber=" + options.pageNumber : '';
-    base_url += options.SellerInfo ? "&outputSelector(0)=SellerInfo" : '';
+    base_url += options.sellerInfo ? "&outputSelector(0)=SellerInfo" : '';
     return base_url;
 };
 
