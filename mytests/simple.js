@@ -90,10 +90,10 @@ function getSellerTransactions() {
 
 }
 
-//ebay.setOutputRawData(false);
+ebay.setOutputRawData(true);
 //ebay.setOutputXMLData(true);
 //getItem();
 //getMySelling();
-//search();
-getSellerList();
+search();
+//getSellerList();
 //getSellerTransactions();

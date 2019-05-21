@@ -35,3 +35,7 @@ node_modules/
 /test/activeListings.json
 /test/getItem.json
 .vscode
+mytests/
+coverage/
+.nyc*
+/mytests/

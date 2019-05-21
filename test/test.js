@@ -53,7 +53,7 @@ describe("call findItemsByKeywords", function () {
             assert.isNull(err);
             assert.isNotNull(data);
             assert.property(data, 'findItemsByKeywordsResponse');
-            assert.property(data.findItemsByKeywordsResponse.searchResults[0].item[0], 'itemId');
+            assert.property(data.findItemsByKeywordsResponse[0].searchResult[0].item[0], 'itemId');
             done();
         });
     });
