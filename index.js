@@ -1,5 +1,5 @@
-const ebayXML = require('./nodejs-ebay-api');
-const ebayFind = require('./ebay-find-api');
+const ebayXML = require('./lib/nodejs-ebay-api');
+const ebayFind = require('./lib/ebay-find-api');
 
 const formatData = require("./lib/formatData");
 
