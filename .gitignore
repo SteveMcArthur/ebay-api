@@ -39,3 +39,4 @@ mytests/
 coverage/
 .nyc*
 /mytests/
+/mytests/safetest.js
